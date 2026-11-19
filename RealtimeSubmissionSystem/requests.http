@@ -1,0 +1,49 @@
+@host = http://localhost:5000
+@pingHost = http://localhost:5200
+@contentType = application/json
+
+### 1. GET /api/assignments -> 200
+GET {{host}}/api/assignments
+
+### 2. POST submission hợp lệ -> 201 + Location: /api/submissions/{id}
+# @name createSubmission
+POST {{host}}/api/assignments/1/submissions
+Content-Type: {{contentType}}
+
+{
+  "studentCode": "SV001",
+  "repositoryUrl": "https://github.com/sv001/bai3-signalr"
+}
+
+### 3. POST thiếu studentCode và repositoryUrl -> 400
+POST {{host}}/api/assignments/1/submissions
+Content-Type: {{contentType}}
+
+{}
+
+### 4. POST vào assignment không tồn tại -> 404
+POST {{host}}/api/assignments/999/submissions
+Content-Type: {{contentType}}
+
+{
+  "studentCode": "SV001",
+  "repositoryUrl": "https://github.com/sv001/bai3-signalr"
+}
+
+### 5. GET submission 1 -> 200, sau khoảng 5 giây status = graded
+GET {{host}}/api/submissions/1
+
+### 6. GET submission không tồn tại -> 404
+GET {{host}}/api/submissions/999999
+
+### 7. GET assignment 1 -> 200
+GET {{host}}/api/assignments/1
+
+### 8. GET assignment không tồn tại -> 404
+GET {{host}}/api/assignments/999
+
+### 9. Negotiate SubmissionHub -> 200, trả connectionId
+POST {{host}}/hubs/submissions/negotiate?negotiateVersion=1
+
+### 10. Negotiate PingHub -> 200, trả connectionId
+POST {{pingHost}}/hubs/ping/negotiate?negotiateVersion=1
