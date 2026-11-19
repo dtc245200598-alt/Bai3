@@ -36,7 +36,24 @@ Hoặc dùng **Terminal → Run Task** và chọn các task `Ping: ...` đã c�
 trong `.vscode/tasks.json`. Có thể bấm **F5** với cấu hình `Ping.Api` / `Ping.Client`
 trong `.vscode/launch.json`.
 
-### Lệnh tương tác ở máy khách
+### Client chạy đúng kịch bản trong slide
+
+Chạy bình thường, client tự động làm lần lượt:
+
+1. Gửi `Echo("Xin chào SignalR")` — chỉ mình nhận `EchoResponse`.
+2. Chờ 2 giây để máy khách thứ hai kịp kết nối.
+3. `JoinGroup("lop-hoc-01")` — cả nhóm nhận `GroupMessage`.
+4. `Broadcast(...)` — mọi kết nối nhận `BroadcastMessage`.
+5. `SendToGroup("lop-hoc-01", ...)` — thành viên nhóm nhận `GroupMessage`.
+6. Chờ Enter để thoát (khi chạy trong terminal).
+
+Vì vậy chỉ cần chạy An trước, Bình sau khoảng 1–2 giây là hai bên thấy tin của nhau.
+
+Nếu muốn tự gõ lệnh, thêm `--interactive`:
+
+```powershell
+dotnet run --project PingSignalR/src/Ping.Client -- http://localhost:5200 An --interactive
+```
 
 ```text
 echo <tin>            -> chỉ mình bạn nhận EchoResponse (Clients.Caller)
@@ -44,16 +61,6 @@ broadcast <tin>       -> mọi kết nối nhận BroadcastMessage (Clients.All)
 join <nhóm>           -> vào nhóm, cả nhóm nhận GroupMessage
 group <nhóm> <tin>    -> gửi tin cho thành viên nhóm (Clients.Group)
 help / exit
-```
-
-Ví dụ demo nhanh (không cần gõ tay):
-
-```powershell
-# Terminal 2
-dotnet run --project PingSignalR/src/Ping.Client -- http://localhost:5200 An --demo
-
-# Terminal 3 (chạy sau khoảng 1–2 giây)
-dotnet run --project PingSignalR/src/Ping.Client -- http://localhost:5200 Binh --demo
 ```
 
 ## 3. Bốn phạm vi gửi của hub
@@ -103,15 +110,8 @@ Content-Type: application/json
 
 ### Kiểm tra bước 5
 
-Ở An gõ:
-
-```text
-join lop-hoc-01
-broadcast An: Xin chào cả lớp
-group lop-hoc-01 An: Tin nhắn nhóm
-```
-
-Ở Bình cũng `join lop-hoc-01`. Kết quả thật (đã rút gọn ConnectionId):
+Chạy An trước, Bình sau khoảng 1–2 giây. Client tự gửi `Echo`, `JoinGroup`,
+`Broadcast`, `SendToGroup` (không cần gõ tay). Kết quả thật (đã rút gọn ConnectionId):
 
 ```text
 [An] Đã kết nối SignalR. ConnectionId: kPjz...

@@ -13,7 +13,8 @@ catch
 
 // Cách dùng:
 //   dotnet run --project src/Ping.Client -- http://localhost:5200 An
-//   dotnet run --project src/Ping.Client -- http://localhost:5200 Binh --demo
+//   dotnet run --project src/Ping.Client -- http://localhost:5200 Binh
+//   dotnet run --project src/Ping.Client -- http://localhost:5200 An --interactive
 //   dotnet run --project src/Ping.Client -- http://localhost:5200 An --lab hub|method|event
 var serverUrl = args.Length > 0 && !args[0].StartsWith("--")
     ? args[0].TrimEnd('/')
@@ -24,7 +25,10 @@ var name = args.Length > 1 && !args[1].StartsWith("--")
     : "An";
 
 var lab = GetOption(args, "--lab");
-var demo = args.Contains("--demo");
+
+// Mặc định chạy đúng kịch bản trong slide: Echo -> JoinGroup -> Broadcast -> SendToGroup.
+// Thêm --interactive nếu muốn tự gõ lệnh.
+var interactive = args.Contains("--interactive");
 
 // Bài lab 1: cố ý dùng sai đường dẫn hub để nhận 404 ở bước negotiate.
 var hubUrl = lab == "hub"
@@ -129,13 +133,14 @@ if (lab == "event")
 // Gửi thử một Echo ngay sau khi kết nối để thấy đúng phạm vi Caller.
 await connection.InvokeAsync("Echo", "Xin chào SignalR");
 
-if (demo)
+if (!interactive)
 {
     const string group = "lop-hoc-01";
 
     try
     {
-        await Task.Delay(TimeSpan.FromSeconds(1));
+        // Chờ một chút để máy khách thứ hai kịp kết nối và vào nhóm.
+        await Task.Delay(TimeSpan.FromSeconds(2));
         await connection.InvokeAsync("JoinGroup", group);
 
         await Task.Delay(TimeSpan.FromSeconds(1));
@@ -144,7 +149,16 @@ if (demo)
         await Task.Delay(TimeSpan.FromSeconds(1));
         await connection.InvokeAsync("SendToGroup", group, $"{name}: Tin nhắn cho nhóm {group}");
 
-        await Task.Delay(TimeSpan.FromSeconds(6));
+        Console.WriteLine("Đã gửi đủ Echo, JoinGroup, Broadcast, SendToGroup.");
+        if (Console.IsInputRedirected)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(8));
+        }
+        else
+        {
+            Console.WriteLine("Nhấn Enter để thoát...");
+            Console.ReadLine();
+        }
     }
     catch (Exception ex)
     {
@@ -157,7 +171,7 @@ if (demo)
     return;
 }
 
-Console.WriteLine("Lệnh: echo <tin> | broadcast <tin> | join <nhóm> | group <nhóm> <tin> | help | exit");
+Console.WriteLine("Chế độ tương tác. Lệnh: echo <tin> | broadcast <tin> | join <nhóm> | group <nhóm> <tin> | help | exit");
 
 while (true)
 {

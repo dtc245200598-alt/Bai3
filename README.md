@@ -45,7 +45,7 @@ dotnet run --project RealtimeSubmissionSystem/src/Submission.Client -- http://lo
 
 - `Build: cả hai solution`
 - `Ping: máy chủ (5200)`
-- `Ping: An`, `Ping: Bình`, `Ping: demo An + Bình`
+- `Ping: An`, `Ping: Bình`, `Ping: An (tương tác)`, `Ping: Bình (tương tác)`
 - `Edu: máy chủ (5000)`
 - `Edu: máy khách`, `Edu: khách Watch muộn`, `Edu: khách sai sự kiện`, `Edu: khách sai hub`
 

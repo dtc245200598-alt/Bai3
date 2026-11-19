@@ -52,18 +52,18 @@
       "problemMatcher": []
     },
     {
-      "label": "Ping: demo An",
+      "label": "Ping: An (tương tác)",
       "type": "process",
       "command": "dotnet",
-      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "An", "--demo"],
+      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "An", "--interactive"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     },
     {
-      "label": "Ping: demo Bình",
+      "label": "Ping: Bình (tương tác)",
       "type": "process",
       "command": "dotnet",
-      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "Binh", "--demo"],
+      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "Binh", "--interactive"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     },

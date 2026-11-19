@@ -54,7 +54,7 @@ HTTP/1.1 200 OK
 
 ## 2. PingSignalR
 
-Hai máy khách An/Bình chạy `--demo`:
+Hai máy khách An/Bình chạy mặc định (tự gửi Echo → JoinGroup → Broadcast → SendToGroup):
 
 ```text
 [An] Đã kết nối SignalR. ConnectionId: kPjz6pj8dPs1zUbvnxZ8Yg
