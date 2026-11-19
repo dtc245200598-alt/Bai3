@@ -5,9 +5,9 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Submission.Api", "src\Submission.Api\Submission.Api.csproj", "{5D5F0CE3-0F98-4BE4-B65A-010FEFE00D23}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Submission.RealtimeApi", "src\Submission.RealtimeApi\Submission.RealtimeApi.csproj", "{5D5F0CE3-0F98-4BE4-B65A-010FEFE00D23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Submission.Client", "src\Submission.Client\Submission.Client.csproj", "{36DE3790-FCF2-44FD-84C6-43192DB853C8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Submission.RealtimeClient", "src\Submission.RealtimeClient\Submission.RealtimeClient.csproj", "{36DE3790-FCF2-44FD-84C6-43192DB853C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

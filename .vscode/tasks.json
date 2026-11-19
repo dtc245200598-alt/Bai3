@@ -95,7 +95,7 @@
       "label": "Edu: máy chủ (5000)",
       "type": "process",
       "command": "dotnet",
-      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Api"],
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.RealtimeApi"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": [],
       "isBackground": true
@@ -104,7 +104,7 @@
       "label": "Edu: máy khách",
       "type": "process",
       "command": "dotnet",
-      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Client", "--", "http://localhost:5000", "SV001"],
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.RealtimeClient", "--", "http://localhost:5000", "SV001"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     },
@@ -112,7 +112,7 @@
       "label": "Edu: khách Watch muộn",
       "type": "process",
       "command": "dotnet",
-      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Client", "--", "http://localhost:5000", "SV005", "--late-watch"],
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.RealtimeClient", "--", "http://localhost:5000", "SV005", "--late-watch"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     },
@@ -120,7 +120,7 @@
       "label": "Edu: khách sai sự kiện",
       "type": "process",
       "command": "dotnet",
-      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Client", "--", "http://localhost:5000", "SV004", "--wrong-event"],
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.RealtimeClient", "--", "http://localhost:5000", "SV004", "--wrong-event"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     },
@@ -128,7 +128,15 @@
       "label": "Edu: khách sai hub",
       "type": "process",
       "command": "dotnet",
-      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Client", "--", "http://localhost:5000", "SV003", "--wrong-hub"],
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.RealtimeClient", "--", "http://localhost:5000", "SV003", "--wrong-hub"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Edu: khách repo http (failed)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.RealtimeClient", "--", "http://localhost:5000", "SV006", "--http-repo"],
       "options": { "cwd": "${workspaceFolder}" },
       "problemMatcher": []
     }

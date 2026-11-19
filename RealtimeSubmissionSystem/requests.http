@@ -47,3 +47,16 @@ POST {{host}}/hubs/submissions/negotiate?negotiateVersion=1
 
 ### 10. Negotiate PingHub -> 200, trả connectionId
 POST {{pingHost}}/hubs/ping/negotiate?negotiateVersion=1
+
+### 11. POST repositoryUrl dùng http:// -> 201, status = failed (yêu cầu cộng điểm)
+# @name createFailedSubmission
+POST {{host}}/api/assignments/1/submissions
+Content-Type: {{contentType}}
+
+{
+  "studentCode": "SV006",
+  "repositoryUrl": "http://github.com/sv006/bai3-signalr"
+}
+
+### 12. GET submission vừa tạo -> 200, status = failed (không chuyển sang graded)
+GET {{host}}/api/submissions/{{createFailedSubmission.response.body.$.id}}

@@ -190,4 +190,4 @@ SignalR không lưu tin: mất kết nối/vào nhóm muộn thì phải đọc 
 
 - Port mặc định 5200 nằm trong `src/Ping.Api/Properties/launchSettings.json`.
 - Nếu 5200 đang bị chiếm, đổi `applicationUrl` và URL truyền cho client.
-- Ảnh minh chứng đặt trong `../docs/screenshots/` theo tên ở bảng bước 4.
+- Ảnh minh chứng đặt trong `../anh/` (nhúng trong [README gốc](../README.md#5-minh-chứng-trong-anh)).

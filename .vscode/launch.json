@@ -33,33 +33,33 @@
       "stopAtEntry": false
     },
     {
-      "name": "Submission.Api (5000)",
+      "name": "Submission.RealtimeApi (5000)",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "Build: RealtimeSubmissionSystem",
-      "program": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Api/bin/Debug/net10.0/Submission.Api.dll",
-      "cwd": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Api",
+      "program": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.RealtimeApi/bin/Debug/net10.0/Submission.RealtimeApi.dll",
+      "cwd": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.RealtimeApi",
       "env": { "ASPNETCORE_URLS": "http://localhost:5000" },
       "console": "integratedTerminal",
       "stopAtEntry": false
     },
     {
-      "name": "Submission.Client (SV001)",
+      "name": "Submission.RealtimeClient (SV001)",
       "type": "coreclr",
       "request": "launch",
-      "program": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Client/bin/Debug/net10.0/Submission.Client.dll",
+      "program": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.RealtimeClient/bin/Debug/net10.0/Submission.RealtimeClient.dll",
       "args": ["http://localhost:5000", "SV001"],
-      "cwd": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Client",
+      "cwd": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.RealtimeClient",
       "console": "integratedTerminal",
       "stopAtEntry": false
     },
     {
-      "name": "Submission.Client - Watch muộn",
+      "name": "Submission.RealtimeClient - Watch muộn",
       "type": "coreclr",
       "request": "launch",
-      "program": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Client/bin/Debug/net10.0/Submission.Client.dll",
+      "program": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.RealtimeClient/bin/Debug/net10.0/Submission.RealtimeClient.dll",
       "args": ["http://localhost:5000", "SV005", "--late-watch"],
-      "cwd": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Client",
+      "cwd": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.RealtimeClient",
       "console": "integratedTerminal",
       "stopAtEntry": false
     }

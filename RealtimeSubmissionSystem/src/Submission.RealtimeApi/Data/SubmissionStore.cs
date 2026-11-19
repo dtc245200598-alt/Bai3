@@ -52,7 +52,11 @@ public sealed class SubmissionStore
         }
     }
 
-    public Submission CreateSubmission(int assignmentId, string studentCode, string repositoryUrl)
+    public Submission CreateSubmission(
+        int assignmentId,
+        string studentCode,
+        string repositoryUrl,
+        SubmissionStatus status = SubmissionStatus.Received)
     {
         lock (_gate)
         {
@@ -63,7 +67,7 @@ public sealed class SubmissionStore
                 AssignmentId = assignmentId,
                 StudentCode = studentCode,
                 RepositoryUrl = repositoryUrl,
-                Status = SubmissionStatus.Received,
+                Status = status,
                 CreatedAt = now,
                 UpdatedAt = now
             };

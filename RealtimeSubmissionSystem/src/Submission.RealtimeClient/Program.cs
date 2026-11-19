@@ -11,11 +11,17 @@ catch
     // Bỏ qua nếu terminal không cho đổi encoding.
 }
 
+// Khi stdout bị chuyển hướng, Console.OutputEncoding có thể không đặt được.
+// Ghi thẳng UTF-8 để log tiếng Việt không bị mất dấu.
+Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true });
+Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
+
 // Cách dùng:
-//   dotnet run --project src/Submission.Client -- http://localhost:5000 SV001
-//   dotnet run --project src/Submission.Client -- http://localhost:5000 SV002 --late-watch
-//   dotnet run --project src/Submission.Client -- http://localhost:5000 SV003 --wrong-event
-//   dotnet run --project src/Submission.Client -- http://localhost:5000 SV004 --wrong-hub
+//   dotnet run --project src/Submission.RealtimeClient -- http://localhost:5000 SV001
+//   dotnet run --project src/Submission.RealtimeClient -- http://localhost:5000 SV002 --late-watch
+//   dotnet run --project src/Submission.RealtimeClient -- http://localhost:5000 SV003 --wrong-event
+//   dotnet run --project src/Submission.RealtimeClient -- http://localhost:5000 SV004 --wrong-hub
+//   dotnet run --project src/Submission.RealtimeClient -- http://localhost:5000 SV006 --http-repo
 var baseUrl = args.Length > 0 && !args[0].StartsWith("--")
     ? args[0].TrimEnd('/')
     : "http://localhost:5000";
@@ -27,6 +33,7 @@ var studentCode = args.Length > 1 && !args[1].StartsWith("--")
 var lateWatch = args.Contains("--late-watch");   // Thí nghiệm 5: vào nhóm muộn
 var wrongEvent = args.Contains("--wrong-event"); // Thí nghiệm 4: sai tên sự kiện On
 var wrongHub = args.Contains("--wrong-hub");     // Thí nghiệm 3: sai đường dẫn hub
+var httpRepo = args.Contains("--http-repo");     // Yêu cầu cộng điểm: repo http:// -> failed
 
 var hubUrl = wrongHub
     ? $"{baseUrl}/hub/submissions"
@@ -45,7 +52,8 @@ var connection = new HubConnectionBuilder()
 
 var isStopping = false;
 
-var graded = new TaskCompletionSource<SubmissionStatusMessage>(
+// graded hoặc failed đều là trạng thái kết thúc.
+var finished = new TaskCompletionSource<SubmissionStatusMessage>(
     TaskCreationOptions.RunContinuationsAsynchronously);
 
 var eventName = wrongEvent ? "SubmissionStatusChangedWrong" : "SubmissionStatusChanged";
@@ -54,9 +62,10 @@ connection.On<SubmissionStatusMessage>(eventName, message =>
 {
     Console.WriteLine($"Thông báo SignalR: submission {message.Id} -> {message.Status} lúc {message.UpdatedAt:HH:mm:ss}");
 
-    if (message.Status.Equals("graded", StringComparison.OrdinalIgnoreCase))
+    if (message.Status.Equals("graded", StringComparison.OrdinalIgnoreCase)
+        || message.Status.Equals("failed", StringComparison.OrdinalIgnoreCase))
     {
-        graded.TrySetResult(message);
+        finished.TrySetResult(message);
     }
 });
 
@@ -120,7 +129,9 @@ try
     var payload = new
     {
         studentCode,
-        repositoryUrl = $"https://github.com/{studentCode.ToLowerInvariant()}/bai3-demo"
+        repositoryUrl = httpRepo
+            ? $"http://github.com/{studentCode.ToLowerInvariant()}/bai3-demo"
+            : $"https://github.com/{studentCode.ToLowerInvariant()}/bai3-demo"
     };
 
     var response = await http.PostAsJsonAsync("api/assignments/1/submissions", payload);
@@ -152,24 +163,36 @@ catch (HttpRequestException exception)
     return;
 }
 
-// Thí nghiệm 5: cố ý Watch muộn 4 giây -> lỡ mọi thông báo, phải đọc lại REST.
-if (lateWatch)
-{
-    Console.WriteLine("Thí nghiệm 5: chờ 4 giây mới Watch (sẽ lỡ thông báo)...");
-    await Task.Delay(TimeSpan.FromSeconds(4));
-}
+// Yêu cầu cộng điểm: repo không bắt đầu bằng https:// bị đánh dấu failed ngay từ POST.
+// Khi đó máy chủ không chấm bài nên không có thông báo SignalR; chỉ cần đọc lại REST.
+var failedFromPost = created.Status.Equals("failed", StringComparison.OrdinalIgnoreCase);
 
-await connection.InvokeAsync("WatchSubmission", created.Id);
-Console.WriteLine($"Đã gọi WatchSubmission({created.Id})");
-
-try
+if (failedFromPost)
 {
-    var message = await graded.Task.WaitAsync(TimeSpan.FromSeconds(10));
-    Console.WriteLine($"Đã nhận đủ thông báo cho submission {message.Id}.");
+    Console.WriteLine("Submission bị đánh dấu failed: repositoryUrl phải bắt đầu bằng https://.");
+    Console.WriteLine("Máy chủ không chấm bài nên không có thông báo SignalR.");
 }
-catch (TimeoutException)
+else
 {
-    Console.WriteLine("Quá thời gian chờ thông báo graded.");
+    // Thí nghiệm 5: cố ý Watch muộn 4 giây -> lỡ mọi thông báo, phải đọc lại REST.
+    if (lateWatch)
+    {
+        Console.WriteLine("Thí nghiệm 5: chờ 4 giây mới Watch (sẽ lỡ thông báo)...");
+        await Task.Delay(TimeSpan.FromSeconds(4));
+    }
+
+    await connection.InvokeAsync("WatchSubmission", created.Id);
+    Console.WriteLine($"Đã gọi WatchSubmission({created.Id})");
+
+    try
+    {
+        var message = await finished.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        Console.WriteLine($"Đã nhận đủ thông báo cho submission {message.Id} (trạng thái cuối: {message.Status}).");
+    }
+    catch (TimeoutException)
+    {
+        Console.WriteLine("Quá thời gian chờ thông báo graded.");
+    }
 }
 
 // Chốt lại bằng REST: SignalR không lưu tin, REST là nguồn sự thật.

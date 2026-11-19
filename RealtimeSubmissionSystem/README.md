@@ -34,16 +34,16 @@ GET /api/submissions/2               ────────►  đọc lại t
 ```text
 RealtimeSubmissionSystem/
 ├─ RealtimeSubmissionSystem.sln
-├─ requests.http                    # 10 request REST + negotiate
+├─ requests.http                    # 12 request REST + negotiate
 └─ src/
-   ├─ Submission.Api/
+   ├─ Submission.RealtimeApi/
    │  ├─ Program.cs                 # endpoint REST + MapHub
    │  ├─ Models/                    # Assignment, Submission, SubmissionStatus
    │  ├─ Contracts/                 # DTO request/response/push message
    │  ├─ Data/SubmissionStore.cs    # kho in-memory + lock
    │  ├─ Hubs/SubmissionHub.cs      # Watch/Unwatch + OnConnected
    │  └─ Services/GradingSimulator.cs # chấm nền + IHubContext
-   └─ Submission.Client/
+   └─ Submission.RealtimeClient/
       └─ Program.cs                 # hai kênh: SignalR + REST
 ```
 
@@ -53,11 +53,11 @@ Mở thư mục `Bai3`, dùng 2 terminal hoặc **Terminal → Run Task**:
 
 ```powershell
 # Terminal 1 — máy chủ, chạy trước
-dotnet run --project RealtimeSubmissionSystem/src/Submission.Api
+dotnet run --project RealtimeSubmissionSystem/src/Submission.RealtimeApi
 # Now listening on: http://localhost:5000
 
 # Terminal 2 — máy khách
-dotnet run --project RealtimeSubmissionSystem/src/Submission.Client -- http://localhost:5000 SV001
+dotnet run --project RealtimeSubmissionSystem/src/Submission.RealtimeClient -- http://localhost:5000 SV001
 ```
 
 Kết quả thật của máy khách:
@@ -70,7 +70,7 @@ Location: /api/submissions/1
 Đã gọi WatchSubmission(1)
 Thông báo SignalR: submission 1 -> processing lúc 08:40:08
 Thông báo SignalR: submission 1 -> graded lúc 08:40:10
-Đã nhận đủ thông báo cho submission 1.
+Đã nhận đủ thông báo cho submission 1 (trạng thái cuối: graded).
 REST GET /api/submissions/1 -> 200
 Trạng thái cuối từ REST: graded (UpdatedAt: 08:40:10)
 Hoàn tất: REST là nguồn sự thật, SignalR chỉ báo thay đổi.
@@ -83,16 +83,19 @@ trạng thái trong khoảng đó.
 
 ```powershell
 # Thí nghiệm 5: Watch muộn 4 giây -> lỡ thông báo
-dotnet run --project RealtimeSubmissionSystem/src/Submission.Client -- http://localhost:5000 SV005 --late-watch
+dotnet run --project RealtimeSubmissionSystem/src/Submission.RealtimeClient -- http://localhost:5000 SV005 --late-watch
 
 # Thí nghiệm 4: sai tên sự kiện On -> im lặng
-dotnet run --project RealtimeSubmissionSystem/src/Submission.Client -- http://localhost:5000 SV004 --wrong-event
+dotnet run --project RealtimeSubmissionSystem/src/Submission.RealtimeClient -- http://localhost:5000 SV004 --wrong-event
 
 # Thí nghiệm 3: sai đường dẫn hub -> 404
-dotnet run --project RealtimeSubmissionSystem/src/Submission.Client -- http://localhost:5000 SV003 --wrong-hub
+dotnet run --project RealtimeSubmissionSystem/src/Submission.RealtimeClient -- http://localhost:5000 SV003 --wrong-hub
+
+# Yêu cầu cộng điểm: repo http:// -> failed, không chấm bài
+dotnet run --project RealtimeSubmissionSystem/src/Submission.RealtimeClient -- http://localhost:5000 SV006 --http-repo
 ```
 
-## 4. Bảy yêu cầu kiểm tra
+## 4. Bảy yêu cầu kiểm tra (+ yêu cầu cộng điểm)
 
 Chạy máy chủ rồi dùng `requests.http` (extension **REST Client**) hoặc các lệnh dưới.
 
@@ -105,6 +108,7 @@ Chạy máy chủ rồi dùng `requests.http` (extension **REST Client**) hoặc
 | 5 | `POST /hubs/submissions/negotiate` | 200 + `connectionId` | 200, đủ 3 transport |
 | 6 | `GET` theo `Location` sau 5 giây | 200, `status: graded` | 200, `graded` |
 | 7 | `POST :5200/hubs/ping/negotiate` | 200 | 200 (solution PingSignalR) |
+| + | `POST` với `repositoryUrl` dùng `http://` | 201, `status: failed` | 201, `failed`; không chấm bài, không có push |
 
 ```powershell
 # 1
@@ -130,16 +134,44 @@ curl.exe -i -X POST "http://localhost:5000/hubs/submissions/negotiate?negotiateV
 # 6 — thay 1 bằng id trong Location, chờ 5 giây
 Start-Sleep 5
 curl.exe -i http://localhost:5000/api/submissions/1
+
+# + — repositoryUrl dùng http:// -> status failed
+$bad = '{"studentCode":"SV006","repositoryUrl":"http://github.com/sv006/bai3-signalr"}'
+[IO.File]::WriteAllText("$env:TEMP\sub-bad.json", $bad, [Text.UTF8Encoding]::new($false))
+curl.exe -i -X POST http://localhost:5000/api/assignments/1/submissions `
+  -H "Content-Type: application/json" --data-binary "@$env:TEMP\sub-bad.json"
 ```
 
-`requests.http` có 10 request: 200, 201, 400, 404, 404, 200, 404, negotiate
-SubmissionHub và negotiate PingHub.
+`requests.http` có 12 request: 200, 201, 400, 404, 404, 200, 404, negotiate
+SubmissionHub, negotiate PingHub, POST repo `http://` (failed) và GET lại submission đó.
+
+### 4.1. Yêu cầu cộng điểm — `repositoryUrl` phải bắt đầu bằng `https://`
+
+Trong `CreateSubmission`, sau khi validate:
+
+```csharp
+var accepted = repositoryUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+var submission = store.CreateSubmission(
+    assignmentId, request.StudentCode!.Trim(), repositoryUrl,
+    accepted ? SubmissionStatus.Received : SubmissionStatus.Failed);
+
+if (accepted)
+{
+    grading.Schedule(submission.Id);   // chỉ chấm bài khi repo hợp lệ
+}
+```
+
+- Repo `https://...` → `received` → chấm nền → `processing` → `graded`.
+- Repo `http://...` (hoặc scheme khác) → tạo bản ghi với `failed` ngay, **không** chấm,
+  **không** đẩy thông báo SignalR.
+- Client có cờ `--http-repo` để thử nhanh; khi POST trả `failed`, client bỏ qua bước
+  chờ SignalR và đọc thẳng REST.
 
 ## 5. Năm thí nghiệm (dự đoán → kết quả thật → bài học)
 
 | # | Thí nghiệm | Dự đoán | Kết quả thật | Bài học |
 |---|---|---|---|---|
-| 1 | Hai máy khách cùng lúc | Mỗi người chỉ thấy bài của mình | A nhận submission 3, B nhận submission 4; không lẫn | Nhóm `submission:{id}` tách người nhận |
+| 1 | Hai máy khách cùng lúc | Mỗi người chỉ thấy bài của mình | A nhận submission 7, B nhận submission 8; không lẫn | Nhóm `submission:{id}` tách người nhận |
 | 2 | Máy chủ chưa chạy | Lỗi kết nối ngay | `HttpRequestException: ... actively refused` | Lần nối đầu không tự thử lại; phải bật server trước |
 | 3 | Sai `/hub/submissions` | 404 ở negotiate | `404 (Not Found)` | `WithUrl` phải khớp `MapHub`, có `/hubs/` |
 | 4 | Sai tên sự kiện `On` | Không lỗi, không nhận tin | 10 giây sau: `Quá thời gian...`; REST vẫn `graded` | Sai tên chiều xuống = im lặng |
@@ -194,18 +226,19 @@ Thông báo chỉ có nghĩa khi gắn với **sự kiện thật**: `received �
 | Ai cũng `Watch` được mọi id | Phải xác thực và kiểm tra quyền trước khi vào nhóm | Bài 8–9 — kiến trúc tầng |
 | Kho in-memory, mất khi restart | Cơ sở dữ liệu + transaction | Bài 4–5 |
 
-## 8. Minh chứng cần chụp
-
-Đặt trong `../docs/screenshots/`:
+## 8. Minh chứng trong `../anh/`
 
 - `edusubmit-requests.png` — `requests.http` với 200/201/400/404 và negotiate.
 - `edusubmit-client.png` — client in 2 dòng `Thông báo SignalR` và `graded` từ REST.
-- `edusubmit-thi-nghiem.png` — bảng 5 thí nghiệm hoặc ảnh từng thí nghiệm.
+- `edusubmit-failed.png` — repo `http://` bị đánh dấu `failed`.
+- `edusubmit-thi-nghiem.png` — bảng 5 thí nghiệm.
 - `edusubmit-hub-logs.png` — log `[Hub] ... theo dõi submission:{id}` và `[Push] ...`.
+
+Ảnh đã được nhúng trực tiếp trong [`../README.md`](../README.md#5-minh-chứng-trong-anh).
 
 ## 9. Ghi chú
 
-- Port mặc định 5000 nằm trong `src/Submission.Api/Properties/launchSettings.json`.
+- Port mặc định 5000 nằm trong `src/Submission.RealtimeApi/Properties/launchSettings.json`.
 - Dữ liệu chỉ nằm trong bộ nhớ; khởi động lại máy chủ là reset.
 - Project đích `net10.0`; nếu lớp dùng .NET 8, đổi `TargetFramework` và version gói
   `Microsoft.AspNetCore.SignalR.Client` tương ứng.

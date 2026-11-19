@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EduSubmit.Api.Contracts;
@@ -5,6 +6,19 @@ using EduSubmit.Api.Data;
 using EduSubmit.Api.Hubs;
 using EduSubmit.Api.Models;
 using EduSubmit.Api.Services;
+
+// Ghi UTF-8 kể cả khi stdout bị chuyển hướng (chạy tự động, chụp minh chứng).
+try
+{
+    Console.OutputEncoding = new UTF8Encoding(false);
+}
+catch
+{
+    // Không có console thật; SetOut bên dưới vẫn bảo đảm UTF-8.
+}
+
+Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true });
+Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -96,13 +110,22 @@ static IResult CreateSubmission(
         return Results.ValidationProblem(errors);
     }
 
+    // Yêu cầu cộng điểm: repositoryUrl phải bắt đầu bằng https://.
+    // Nếu không, vẫn tạo bản ghi để tra cứu nhưng đánh dấu failed và không chấm bài.
+    var repositoryUrl = request.RepositoryUrl!.Trim();
+    var accepted = repositoryUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+
     var submission = store.CreateSubmission(
         assignmentId,
         request.StudentCode!.Trim(),
-        request.RepositoryUrl!.Trim());
+        repositoryUrl,
+        accepted ? SubmissionStatus.Received : SubmissionStatus.Failed);
 
-    // Trả 201 ngay; việc chấm bài chạy nền và đẩy thông báo qua hub.
-    grading.Schedule(submission.Id);
+    if (accepted)
+    {
+        // Trả 201 ngay; việc chấm bài chạy nền và đẩy thông báo qua hub.
+        grading.Schedule(submission.Id);
+    }
 
     return Results.Created($"/api/submissions/{submission.Id}", SubmissionResponse.From(submission));
 }

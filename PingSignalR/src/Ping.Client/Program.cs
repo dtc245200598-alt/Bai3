@@ -11,11 +11,17 @@ catch
     // Một số terminal không cho đổi encoding; bỏ qua để chương trình vẫn chạy.
 }
 
+// Khi stdout bị chuyển hướng, Console.OutputEncoding có thể không đặt được.
+// Ghi thẳng UTF-8 để log tiếng Việt không bị mất dấu.
+Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true });
+Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
+
 // Cách dùng:
 //   dotnet run --project src/Ping.Client -- http://localhost:5200 An
 //   dotnet run --project src/Ping.Client -- http://localhost:5200 Binh
 //   dotnet run --project src/Ping.Client -- http://localhost:5200 An --interactive
 //   dotnet run --project src/Ping.Client -- http://localhost:5200 An --lab hub|method|event
+//   dotnet run --project src/Ping.Client -- http://localhost:5200 An --wait 20
 var serverUrl = args.Length > 0 && !args[0].StartsWith("--")
     ? args[0].TrimEnd('/')
     : "http://localhost:5200";
@@ -29,6 +35,10 @@ var lab = GetOption(args, "--lab");
 // Mặc định chạy đúng kịch bản trong slide: Echo -> JoinGroup -> Broadcast -> SendToGroup.
 // Thêm --interactive nếu muốn tự gõ lệnh.
 var interactive = args.Contains("--interactive");
+
+// Chỉ dùng khi stdin bị chuyển hướng (chạy tự động/chụp minh chứng):
+// giữ kết nối thêm N giây thay vì chờ Enter.
+var waitSeconds = GetIntOption(args, "--wait", 8);
 
 // Bài lab 1: cố ý dùng sai đường dẫn hub để nhận 404 ở bước negotiate.
 var hubUrl = lab == "hub"
@@ -152,7 +162,7 @@ if (!interactive)
         Console.WriteLine("Đã gửi đủ Echo, JoinGroup, Broadcast, SendToGroup.");
         if (Console.IsInputRedirected)
         {
-            await Task.Delay(TimeSpan.FromSeconds(8));
+            await Task.Delay(TimeSpan.FromSeconds(waitSeconds));
         }
         else
         {
@@ -263,4 +273,10 @@ static string? GetOption(string[] arguments, string optionName)
 {
     var index = Array.IndexOf(arguments, optionName);
     return index >= 0 && index + 1 < arguments.Length ? arguments[index + 1] : null;
+}
+
+static int GetIntOption(string[] arguments, string optionName, int fallback)
+{
+    var value = GetOption(arguments, optionName);
+    return int.TryParse(value, out var number) && number > 0 ? number : fallback;
 }

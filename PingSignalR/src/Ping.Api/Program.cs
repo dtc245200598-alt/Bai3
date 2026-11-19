@@ -1,4 +1,18 @@
+using System.Text;
 using Ping.Api.Hubs;
+
+// Ghi UTF-8 kể cả khi stdout bị chuyển hướng (chạy tự động, chụp minh chứng).
+try
+{
+    Console.OutputEncoding = new UTF8Encoding(false);
+}
+catch
+{
+    // Không có console thật; SetOut bên dưới vẫn bảo đảm UTF-8.
+}
+
+Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true });
+Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
 
 var builder = WebApplication.CreateBuilder(args);
 
