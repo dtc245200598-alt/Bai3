@@ -1,0 +1,67 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Ping.Api (5200)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build: PingSignalR",
+      "program": "${workspaceFolder}/PingSignalR/src/Ping.Api/bin/Debug/net10.0/Ping.Api.dll",
+      "cwd": "${workspaceFolder}/PingSignalR/src/Ping.Api",
+      "env": { "ASPNETCORE_URLS": "http://localhost:5200" },
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Ping.Client - An",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/PingSignalR/src/Ping.Client/bin/Debug/net10.0/Ping.Client.dll",
+      "args": ["http://localhost:5200", "An"],
+      "cwd": "${workspaceFolder}/PingSignalR/src/Ping.Client",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Ping.Client - Bình",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/PingSignalR/src/Ping.Client/bin/Debug/net10.0/Ping.Client.dll",
+      "args": ["http://localhost:5200", "Binh"],
+      "cwd": "${workspaceFolder}/PingSignalR/src/Ping.Client",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Submission.Api (5000)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "Build: RealtimeSubmissionSystem",
+      "program": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Api/bin/Debug/net10.0/Submission.Api.dll",
+      "cwd": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Api",
+      "env": { "ASPNETCORE_URLS": "http://localhost:5000" },
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Submission.Client (SV001)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Client/bin/Debug/net10.0/Submission.Client.dll",
+      "args": ["http://localhost:5000", "SV001"],
+      "cwd": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Client",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Submission.Client - Watch muộn",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Client/bin/Debug/net10.0/Submission.Client.dll",
+      "args": ["http://localhost:5000", "SV005", "--late-watch"],
+      "cwd": "${workspaceFolder}/RealtimeSubmissionSystem/src/Submission.Client",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}

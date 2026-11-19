@@ -1,0 +1,136 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build: PingSignalR",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "PingSignalR/PingSignalR.sln", "-v:minimal"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "Build: RealtimeSubmissionSystem",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "RealtimeSubmissionSystem/RealtimeSubmissionSystem.sln", "-v:minimal"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": "$msCompile",
+      "group": "build"
+    },
+    {
+      "label": "Build: cả hai solution",
+      "dependsOn": ["Build: PingSignalR", "Build: RealtimeSubmissionSystem"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Ping: máy chủ (5200)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "PingSignalR/src/Ping.Api"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Ping: An",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "An"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ping: Bình",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "Binh"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ping: demo An",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "An", "--demo"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ping: demo Bình",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "Binh", "--demo"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ping: lab sai hub",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "An", "--lab", "hub"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ping: lab sai phương thức",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "An", "--lab", "method"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ping: lab sai sự kiện",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "PingSignalR/src/Ping.Client", "--", "http://localhost:5200", "An", "--lab", "event"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Edu: máy chủ (5000)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Api"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Edu: máy khách",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Client", "--", "http://localhost:5000", "SV001"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Edu: khách Watch muộn",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Client", "--", "http://localhost:5000", "SV005", "--late-watch"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Edu: khách sai sự kiện",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Client", "--", "http://localhost:5000", "SV004", "--wrong-event"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Edu: khách sai hub",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "RealtimeSubmissionSystem/src/Submission.Client", "--", "http://localhost:5000", "SV003", "--wrong-hub"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}
