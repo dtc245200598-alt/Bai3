@@ -1,0 +1,16 @@
+# Bỏ qua thư mục build và cấu hình cá nhân
+bin/
+obj/
+.vs/
+TestResults/
+
+# Tệp người dùng của Visual Studio / VS Code
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/*.log
+
+# Tệp tạm
+*.tmp
+*.log
